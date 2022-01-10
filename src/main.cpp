@@ -9,8 +9,7 @@ int main()
     // be rendered in a DPI sensitive fashion.
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
- 
-    HWND window = createWindow();
+    HWND window = CreateWin32Window();
     if(!window)
     {
         return ERROR_INVALID_WINDOW_HANDLE;
@@ -43,6 +42,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Renderer->Update();
             break;
         case WM_KEYDOWN:
+            if(wParam==VK_F11)
+            {
+                SetFullscreen(hwnd);
+                break;
+            }
             g_Renderer->KeyDown(wParam);
             break;
         case WM_SIZE: {
@@ -53,6 +57,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Renderer->Resize(width, height);
         }
         break;
+        case WM_SYSCHAR:
+            break;
         case WM_CLOSE:
             DestroyWindow(hwnd);
             break;
@@ -65,7 +71,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-HWND createWindow()
+HWND CreateWin32Window()
 {
     // register window class
     LPCSTR     lpClassName = "DirectX12RaytracingClass";
@@ -110,4 +116,48 @@ HWND createWindow()
         MessageBox(NULL, "Failed during window creation!", "Error!", MB_ICONEXCLAMATION | MB_OK);
     }
     return window;
+}
+
+
+void SetFullscreen(HWND window)
+{
+    static bool sFullscreen = false;
+    sFullscreen             = !sFullscreen;
+
+    // store original window settings
+    static RECT windowRect;
+
+    if(sFullscreen)
+    {
+        // Switching to fullscreen
+        // Store the current window dimensions so they can be restored
+        // when switching out of fullscreen state.
+        GetWindowRect(window, &windowRect);
+
+        // Set the window style to a borderless window so the client area fills
+        // the entire screen.
+        UINT windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+
+
+        SetWindowLongW(window, GWL_STYLE, windowStyle);
+
+        // Query the name of the nearest display device for the window.
+        // This is required to set the fullscreen dimensions of the window
+        // when using a multi-monitor setup.
+        HMONITOR      hMonitor    = ::MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+        MONITORINFOEX monitorInfo = {};
+        monitorInfo.cbSize        = sizeof(MONITORINFOEX);
+        GetMonitorInfo(hMonitor, &monitorInfo);
+        SetWindowPos(window, HWND_TOP, monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                        monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top, SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ShowWindow(window, SW_MAXIMIZE);
+    }
+    else
+    {
+        // Restore all the window decorators.
+        SetWindowLong(window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+        SetWindowPos(window, HWND_NOTOPMOST, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+                        SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ShowWindow(window, SW_NORMAL);
+    }
 }

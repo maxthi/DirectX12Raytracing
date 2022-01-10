@@ -7,4 +7,5 @@
 std::unique_ptr<dx::Renderer> g_Renderer;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-HWND             createWindow();
+HWND             CreateWin32Window();
+void             SetFullscreen(HWND window);
