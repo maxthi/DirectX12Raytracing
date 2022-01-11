@@ -19,3 +19,6 @@ file(GLOB_RECURSE FILE_SOURCES RELATIVE
 
 # build exe
 add_executable(${PROJECT_NAME} ${FILE_SOURCES})
+
+message(STATUS "Add external include directory: ${CMAKE_CURRENT_SOURCE_DIR}/external")
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external")
