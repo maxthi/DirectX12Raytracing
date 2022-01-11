@@ -42,7 +42,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             g_Renderer->Update();
             break;
         case WM_KEYDOWN:
-            if(wParam==VK_F11)
+            if(wParam==VK_F12)
             {
                 SetFullscreen(hwnd);
                 break;

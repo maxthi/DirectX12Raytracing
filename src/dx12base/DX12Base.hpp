@@ -11,12 +11,16 @@ namespace dx {
 
         void Init();
 
+        void EnableDebugLayer();
+        ComPtr<IDXGIAdapter4> QueryDx12Adapters(bool useWarp);
+        ComPtr<ID3D12Device2> CreateDevice(ComPtr<IDXGIAdapter4> adapter);
+
       protected:
-        uint32_t                          mNumFrames = 2;
+        static const uint32_t             sNumFrames = 2;
         ComPtr<ID3D12Device2>             mDevice;
         ComPtr<ID3D12CommandQueue>        mCommandQueue;
         ComPtr<IDXGISwapChain4>           mSwapChain;
-        ComPtr<ID3D12Resource>            mBackBuffers[mNumFrames];
+        ComPtr<ID3D12Resource>            mBackBuffers[sNumFrames];
         ComPtr<ID3D12GraphicsCommandList> mCommandList;
         ComPtr<ID3D12CommandAllocator>    mCommandAllocator;
         ComPtr<ID3D12DescriptorHeap>      mRTVDescriptorHeap;
