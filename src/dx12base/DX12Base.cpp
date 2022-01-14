@@ -119,4 +119,17 @@ namespace dx {
 #endif
         return d3d12Device2;
     }
+
+    ComPtr<ID3D12CommandQueue> DX12Base::CreateCommandQueue(ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type) {
+        ComPtr<ID3D12CommandQueue> d3d12CommandQueue;
+
+        D3D12_COMMAND_QUEUE_DESC desc = {};
+        desc.Type                     = type;
+        desc.Priority                 = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+        desc.Flags                    = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        desc.NodeMask                 = 0;
+
+        ThrowIfFailed(device->CreateCommandQueue(&desc, IID_PPV_ARGS(&d3d12CommandQueue)));
+        return ComPtr<ID3D12CommandQueue>();
+    }
 }  // namespace dx

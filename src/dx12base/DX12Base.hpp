@@ -14,6 +14,7 @@ namespace dx {
         void EnableDebugLayer();
         ComPtr<IDXGIAdapter4> QueryDx12Adapters(bool useWarp);
         ComPtr<ID3D12Device2> CreateDevice(ComPtr<IDXGIAdapter4> adapter);
+        ComPtr<ID3D12CommandQueue> CreateCommandQueue(ComPtr<ID3D12Device2> device, D3D12_COMMAND_LIST_TYPE type);
 
       protected:
         static const uint32_t             sNumFrames = 2;
