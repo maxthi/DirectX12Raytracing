@@ -3,6 +3,14 @@
 
 using namespace Microsoft::WRL;
 
+#if defined(max)
+#undef max
+#endif
+
+#if defined(min)
+#undef min
+#endif
+
 // dx12 header contains all direct3d 12 objects (device, command queue, etc.)
 #include <d3d12.h>
 
