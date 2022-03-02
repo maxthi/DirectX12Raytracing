@@ -1,8 +1,6 @@
 #pragma once
 #include <wrl.h>
 
-using namespace Microsoft::WRL;
-
 #if defined(max)
 #undef max
 #endif
@@ -30,7 +28,15 @@ using namespace Microsoft::WRL;
 
 // d3d12 extension library
 // additional functionality
-#include <directx/d3dx12.h>
+//#include <directx/d3dx12.h>
+#include "../../../external/directx/d3dx12.h" // TODO: FIX ME
+
+// windows functionality
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+// include std::exception
+#include <exception>
 
 
 inline void ThrowIfFailed(HRESULT hr)

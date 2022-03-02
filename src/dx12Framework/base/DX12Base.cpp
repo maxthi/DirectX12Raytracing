@@ -1,22 +1,7 @@
 #include "DX12Base.hpp"
+using namespace Microsoft::WRL;
 
 namespace dx {
-
-    void DX12Base::Init()
-    {
-        // enable debug layer
-        EnableDebugLayer();
-
-        // query the gpu adapters
-        auto adapter = QueryDx12Adapters(false);
-
-        // create a dx12 device
-        auto device = CreateDevice(adapter);
-
-        // create a command queue
-        // create a swapchain
-        // create a command allocator & command list
-    }
 
     //------------------------------------------------------------------------------------------------
     void DX12Base::EnableDebugLayer()
@@ -169,6 +154,7 @@ namespace dx {
 
         ThrowIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4)));
 
+        // DXGI WARNING: IDXGIFactory::CreateSwapChain: DXGI_SWAP_CHAIN_DESC.OutputWindow is not a valid window handle.
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
         swapChainDesc.Width                 = width;
         swapChainDesc.Height                = height;
@@ -182,12 +168,13 @@ namespace dx {
         swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_UNSPECIFIED;
         swapChainDesc.Flags                 = CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
+
         ComPtr<IDXGISwapChain1> swapChain1;
 
         // create actualy swapchain
         ThrowIfFailed(dxgiFactory4->CreateSwapChainForHwnd(commandQueue.Get(), hWnd, &swapChainDesc, nullptr, nullptr, &swapChain1));
 
-        // remove alt enter functionality - we use f12
+        // remove alt enter functionality
         ThrowIfFailed(dxgiFactory4->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER));
 
         // cast to swapchain4
@@ -210,7 +197,7 @@ namespace dx {
     }
 
     //------------------------------------------------------------------------------------------------
-    void DX12Base::UpdateRenderTargetViews(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain4> swapChain, ComPtr<ID3D12DescriptorHeap> descriptorHeap)
+    void DX12Base::UpdateRenderTargetViews(ComPtr<ID3D12Device2> device, ComPtr<IDXGISwapChain4> swapChain, ComPtr<ID3D12DescriptorHeap> descriptorHeap, ComPtr<ID3D12Resource>* backBuffers, uint32_t bufferCount)
     {
 
         // the size of a single descriptor is vendor specific
@@ -219,7 +206,7 @@ namespace dx {
         // get a handle to first descriptor in the heap in order to iterate them
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
-        for(int i = 0; i < sNumFrames; ++i)
+        for(int i = 0; i < bufferCount; ++i)
         {
             ComPtr<ID3D12Resource> backBuffer;
             ThrowIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
@@ -229,7 +216,7 @@ namespace dx {
             // third: location where the resource is placed
             device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
 
-            mBackBuffers[i] = backBuffer;
+            backBuffers[i] = backBuffer;
 
             // offset to the next handle
             rtvHandle.Offset(rtvDescriptorSize);
@@ -262,6 +249,8 @@ namespace dx {
 
         // before a commandlist can be reset it must be closed
         ThrowIfFailed(commandList->Close());
+
+        return commandList;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -300,7 +289,7 @@ namespace dx {
     }
 
     //------------------------------------------------------------------------------------------------
-    void DX12Base::WaitForFenceValue(ComPtr<ID3D12Fence> fence, uint64_t fenceValue, HANDLE fenceEvent, std::chrono::milliseconds duration = std::chrono::milliseconds::max())
+    void DX12Base::WaitForFenceValue(ComPtr<ID3D12Fence> fence, uint64_t fenceValue, HANDLE fenceEvent, std::chrono::milliseconds duration)
     {
         // stall the CPU if we need to wait for the GPU to free a resource
         if(fence->GetCompletedValue() < fenceValue)
@@ -310,6 +299,8 @@ namespace dx {
         }
     }
 
+
+    //------------------------------------------------------------------------------------------------
     void DX12Base::Flush(ComPtr<ID3D12CommandQueue> commandQueue, ComPtr<ID3D12Fence> fence, uint64_t& fenceValue, HANDLE fenceEvent)
     {
         // make sure all commands previously executed on the gpu have finished
